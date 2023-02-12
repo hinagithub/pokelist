@@ -37,7 +37,7 @@ export const ItemCard = (props: Pokemon) => {
                             }}
                         >
                             {types.map((t: string, i: number) => (
-                                <Grid item key={i} xs={5}>
+                                <Grid item key={i} xs={6}>
                                     <p>{t}</p>
                                 </Grid>
                             ))}
