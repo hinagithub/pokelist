@@ -3,6 +3,7 @@ import axios from "axios"
 import { Pokemon, PokeAPIType, TypeName } from "../types/pokemon"
 import { ItemCard } from "./ItemCard"
 import Grid from '@mui/material/Grid';
+import { Box } from "@mui/material";
 
 let typeNames: TypeName[]
 
@@ -22,19 +23,33 @@ export const PokemonList: FC<any> = () => {
   }, [])
   return (
     <>
-      <Grid container>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          flexWrap: "wrap",
+          justifyContent: "space-evenly",
+          p: 0,
+          mx: 1,
+          backgroundColor: 'transparent',
+          // '&:hover': {
+          // backgroundColor: 'primary.main',
+          // opacity: [0.9, 0.8, 0.7],
+          // },
+        }}
+      >
         {pokemons.map((pokemon, i) => (
-          <Grid item key={i} xs={12} md={6} xl={3} sx={{ py: 2, px: 2 }}>
+          <div style={{ "margin": 10, "padding": 10 }}>
             <ItemCard id={pokemon.id} name={pokemon.name} url={pokemon.url} types={pokemon.types}></ItemCard>
-          </Grid>
+          </div>
         ))}
-      </Grid>
+      </Box>
     </>
   )
 }
 
 const getPokemons = async (): Promise<Pokemon[]> => {
-  const res = await axios.get("https://pokeapi.co/api/v2/pokemon?limit=15")
+  const res = await axios.get("https://pokeapi.co/api/v2/pokemon?limit=30")
   const summaries = res.data.results
   const pokemons: Pokemon[] = []
 
