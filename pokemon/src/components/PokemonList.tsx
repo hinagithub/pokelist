@@ -2,10 +2,7 @@ import { FC, useState, useEffect } from "react"
 import axios from "axios"
 import { Pokemon, PokeAPIType } from "../types/pokemon"
 import { ItemCard } from "./ItemCard"
-import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
-import { color } from "@mui/system";
-import { Box } from "@mui/material";
 
 export const PokemonList: FC<any> = () => {
   const [pokemons, setPokemons] = useState<Pokemon[]>([])
@@ -20,8 +17,8 @@ export const PokemonList: FC<any> = () => {
     <>
       <Grid container>
         {pokemons.map((pokemon, i) => (
-          <Grid xs={12} md={6} xl={3} sx={{ py: 2, px: 2 }}>
-            <ItemCard key={i} id={pokemon.id} name={pokemon.name} url={pokemon.url} types={pokemon.types}></ItemCard>
+          <Grid item key={i} xs={12} md={6} xl={3} sx={{ py: 2, px: 2 }}>
+            <ItemCard id={pokemon.id} name={pokemon.name} url={pokemon.url} types={pokemon.types}></ItemCard>
           </Grid>
         ))}
       </Grid>
