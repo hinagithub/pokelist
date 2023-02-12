@@ -5,6 +5,7 @@ export type Pokemon = {
     types: string[]
 }
 
+
 export type PokeAPIType = {
     slot: number
     type: {
@@ -13,3 +14,7 @@ export type PokeAPIType = {
     }
 }
 
+export type TypeName = {
+    en: string
+    ja: string
+}

@@ -3,7 +3,7 @@ import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 import Typography from '@mui/material/Typography';
 import { Pokemon } from '../types/pokemon';
-import { Grid } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 export const ItemCard = (props: Pokemon) => {
     const { id, url, name, types } = props
     return (
@@ -26,13 +26,23 @@ export const ItemCard = (props: Pokemon) => {
                     <CardContent>
                         <Typography variant="body2" color="text.secondary">No.{id}</Typography>
                         <Typography gutterBottom variant="h5" component="div">{name}</Typography>
-                        <Grid container spacing={2}>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                p: 0,
+                                m: 0,
+                                bgcolor: 'background.paper',
+                                borderRadius: 1,
+                            }}
+                        >
                             {types.map((t: string, i: number) => (
-                                <Grid item key={i} xs={3}>
+                                <Grid item key={i} xs={5}>
                                     <p>{t}</p>
                                 </Grid>
                             ))}
-                        </Grid>
+                        </Box>
+
 
                     </CardContent>
                 </Grid>
