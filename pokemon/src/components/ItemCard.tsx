@@ -42,8 +42,6 @@ export const ItemCard = (props: Pokemon) => {
                                 </Grid>
                             ))}
                         </Box>
-
-
                     </CardContent>
                 </Grid>
             </Grid >
