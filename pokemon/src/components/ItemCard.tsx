@@ -7,7 +7,7 @@ import { Box, Grid } from '@mui/material';
 export const ItemCard = (props: Pokemon) => {
     const { id, url, name, types } = props
     return (
-        <Card sx={{ width: 350, borderRadius: '5%' }} >
+        <Card sx={{ width: 350, borderRadius: 7 }} >
             <Grid
                 container
                 direction="row"
