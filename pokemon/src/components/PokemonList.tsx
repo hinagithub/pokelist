@@ -1,26 +1,27 @@
-import { FC, useState, useEffect } from "react"
+import { FC, useState, useEffect, useContext } from "react"
 import axios from "axios"
 import { Pokemon, PokeAPIType, TypeName } from "../types/pokemon"
 import { ItemCard } from "./ItemCard"
-import Grid from '@mui/material/Grid';
 import { Box } from "@mui/material";
+import { SearchWordContext } from "../providers/SerchWordProvider";
 
-let typeNames: TypeName[]
+const typeNames: TypeName[] = []
 
 export const PokemonList: FC<any> = () => {
   const [pokemons, setPokemons] = useState<Pokemon[]>([])
-  const [types, setTypes] = useState<TypeName[]>([])
+  const { searchWord } = useContext(SearchWordContext)
+  console.log("searchWord @PokeList", searchWord)
 
   useEffect(() => {
     const fetch = async () => {
       const types = await getTypeNames()
-      setTypes(types)
-      typeNames = types
+      typeNames.push(...types)
       const pokes = await getPokemons()
       setPokemons(pokes)
     }
     fetch()
   }, [])
+
   return (
     <>
       <Box
@@ -39,7 +40,7 @@ export const PokemonList: FC<any> = () => {
         }}
       >
         {pokemons.map((pokemon, i) => (
-          <div style={{ "margin": 10, "padding": 10 }}>
+          <div style={{ "margin": 10, "padding": 10 }} key={i}>
             <ItemCard id={pokemon.id} name={pokemon.name} url={pokemon.url} types={pokemon.types}></ItemCard>
           </div>
         ))}

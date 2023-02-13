@@ -3,6 +3,8 @@ import { css } from '@emotion/react'
 
 import { PokemonList } from "./components/PokemonList"
 import { Search } from "./components/Search"
+import { SearchWordProvider } from "./providers/SerchWordProvider"
+
 
 const style = css({
   background: 'linear-gradient( to bottom,#dad4ec 0%,#f3e7e9 100% )',
@@ -11,8 +13,10 @@ const style = css({
 function App() {
   return (
     <div css={[style]}>
-      <Search></Search>
-      <PokemonList ></PokemonList >
+      <SearchWordProvider>
+        <Search />
+        <PokemonList />
+      </SearchWordProvider>
     </div>
   )
 }

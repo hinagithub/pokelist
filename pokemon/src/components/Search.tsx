@@ -1,7 +1,14 @@
 import { Grid, InputAdornment, TextField } from "@mui/material"
+import { useContext } from "react";
 import { BsSearch } from "react-icons/bs";
+import { SearchWordContext } from "../providers/SerchWordProvider";
 
 export const Search = () => {
+    const { searchWord, setSearchWord } = useContext(SearchWordContext)
+    const handleChange = (event: any) => {
+        console.log("event @Search.tsx", event.target.value)
+        setSearchWord(event.target.value);
+    }
     return (
         <Grid container
             direction="row"
@@ -9,6 +16,8 @@ export const Search = () => {
             alignItems="center">
             <Grid item>
                 <TextField
+                    value={searchWord}
+                    onChange={handleChange}
                     sx={{
                         width: "80vw",
                         py: 10,
