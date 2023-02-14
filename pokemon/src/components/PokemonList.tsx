@@ -4,12 +4,17 @@ import { Pokemon, PokeAPIType, TypeName } from "../types/pokemon"
 import { ItemCard } from "./ItemCard"
 import { Box, Button } from "@mui/material";
 import { SearchWordContext } from "../providers/SerchWordProvider";
-import { BsSortAlphaDown, BsSortNumericDown } from "react-icons/bs";
+import { BsSortAlphaDown, BsSortNumericDown, BsFilter } from "react-icons/bs";
 
+// 全タイプ名の配列(日本語と英語)
 const typeNames: TypeName[] = []
+
+// フィルタ選択されているタイプ名の配列
+const selectedFilterTypes: string[] = []
 
 export const PokemonList: FC<any> = () => {
   const [pokemons, setPokemons] = useState<Pokemon[]>([])
+  const [fullPokemons, setFullPokemons] = useState<Pokemon[]>([])
   const { searchWord } = useContext(SearchWordContext)
   console.log("searchWord @PokeList", searchWord)
 
@@ -17,8 +22,9 @@ export const PokemonList: FC<any> = () => {
     const fetch = async () => {
       const types = await getTypeNames()
       typeNames.push(...types)
-      const pokes = await getPokemons()
-      setPokemons(pokes)
+      const pokemons = await getPokemons()
+      setPokemons(pokemons)
+      setFullPokemons(pokemons)
     }
     fetch()
   }, [])
@@ -41,11 +47,33 @@ export const PokemonList: FC<any> = () => {
    */
   const sortPokemonListById = () => {
     console.log("番号順ボタン押下")
-    // 単純にpokemons.sort(...)としたら更新されない。ヒント: in-placeアルゴリズム
     const sorted = [...pokemons].sort((a: Pokemon, b: Pokemon) => {
       return a.id > b.id ? 1 : -1
     })
     setPokemons(sorted)
+  }
+
+
+  /**
+   * タイプフィルタ
+   */
+  const filterByGrass = (type: string) => {
+    console.log("タイプフィルタ押下", type)
+    selectedFilterTypes.push(type)
+    const filtered = fullPokemons.filter((pokemon: Pokemon) => {
+      let included = false
+      for (const type of pokemon.types) {
+        console.log(selectedFilterTypes)
+        if (selectedFilterTypes.includes(type)) {
+          console.log("break", selectedFilterTypes.includes(type))
+          included = true
+          break
+        }
+      }
+      return included
+    })
+    console.log(filtered)
+    setPokemons(filtered)
   }
 
 
@@ -58,7 +86,8 @@ export const PokemonList: FC<any> = () => {
           flexWrap: "wrap",
           justifyContent: "space-evenly",
           p: 0,
-          mx: 1,
+          pb: 2,
+          mx: 10,
           backgroundColor: 'transparent',
         }}
       >
@@ -83,6 +112,32 @@ export const PokemonList: FC<any> = () => {
           番号順
         </Button>
       </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          flexWrap: "wrap",
+          justifyContent: "space-evenly",
+          p: 0,
+          pb: 2,
+          mx: 10,
+          backgroundColor: 'transparent',
+        }}
+      >
+
+        {typeNames.map((typename, i) => (
+          <Button
+            variant="text"
+            color="secondary"
+            size="large"
+            sx={{ borderRadius: 10 }}
+            onClick={() => filterByGrass(typename.ja)}
+          >
+            {typename.ja}
+          </Button>
+        ))}
+      </Box>
+
       <Box
         sx={{
           display: 'flex',
