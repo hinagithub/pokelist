@@ -124,7 +124,6 @@ export const PokemonList: FC<any> = () => {
           backgroundColor: 'transparent',
         }}
       >
-
         {typeNames.map((typename, i) => (
           <Button
             variant="text"
