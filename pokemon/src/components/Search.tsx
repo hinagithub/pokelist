@@ -20,7 +20,8 @@ export const Search = () => {
                     onChange={handleChange}
                     sx={{
                         width: "80vw",
-                        py: 10,
+                        pt: 10,
+                        pb: 5,
                         "& .MuiInputBase-root": {
                             height: 80,
                             fontSize: 40,
