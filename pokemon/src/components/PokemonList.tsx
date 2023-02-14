@@ -2,8 +2,9 @@ import { FC, useState, useEffect, useContext } from "react"
 import axios from "axios"
 import { Pokemon, PokeAPIType, TypeName } from "../types/pokemon"
 import { ItemCard } from "./ItemCard"
-import { Box } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import { SearchWordContext } from "../providers/SerchWordProvider";
+import { BsSortAlphaDown, BsSortNumericDown } from "react-icons/bs";
 
 const typeNames: TypeName[] = []
 
@@ -22,6 +23,32 @@ export const PokemonList: FC<any> = () => {
     fetch()
   }, [])
 
+
+  /**
+   * アイウエオ順にソート
+   */
+  const sortPokemonListByJapaneseName = () => {
+    console.log("アイウエオ順ボタン押下")
+    // 単純にpokemons.sort(...)としたら更新されない。ヒント: in-placeアルゴリズム
+    const sorted = [...pokemons].sort((a: Pokemon, b: Pokemon) => {
+      return a.name > b.name ? 1 : -1
+    })
+    setPokemons(sorted)
+  }
+
+  /**
+   * 番号順にソート
+   */
+  const sortPokemonListById = () => {
+    console.log("番号順ボタン押下")
+    // 単純にpokemons.sort(...)としたら更新されない。ヒント: in-placeアルゴリズム
+    const sorted = [...pokemons].sort((a: Pokemon, b: Pokemon) => {
+      return a.id > b.id ? 1 : -1
+    })
+    setPokemons(sorted)
+  }
+
+
   return (
     <>
       <Box
@@ -33,10 +60,38 @@ export const PokemonList: FC<any> = () => {
           p: 0,
           mx: 1,
           backgroundColor: 'transparent',
-          // '&:hover': {
-          // backgroundColor: 'primary.main',
-          // opacity: [0.9, 0.8, 0.7],
-          // },
+        }}
+      >
+        <Button
+          variant="text"
+          color="secondary"
+          size="large"
+          sx={{ borderRadius: 10 }}
+          startIcon={<BsSortAlphaDown />}
+          onClick={sortPokemonListByJapaneseName}
+        >
+          アイウエオ順
+        </Button>
+        <Button
+          variant="text"
+          color="secondary"
+          size="large"
+          sx={{ borderRadius: 10 }}
+          startIcon={<BsSortNumericDown />}
+          onClick={sortPokemonListById}
+        >
+          番号順
+        </Button>
+      </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          flexWrap: "wrap",
+          justifyContent: "space-evenly",
+          p: 0,
+          mx: 1,
+          backgroundColor: 'transparent',
         }}
       >
         {pokemons.map((pokemon, i) => (
@@ -49,6 +104,9 @@ export const PokemonList: FC<any> = () => {
   )
 }
 
+/**
+ * ポケモン一覧取得
+ */
 const getPokemons = async (): Promise<Pokemon[]> => {
   const res = await axios.get("https://pokeapi.co/api/v2/pokemon?limit=30")
   const summaries = res.data.results
@@ -74,10 +132,16 @@ const getPokemons = async (): Promise<Pokemon[]> => {
   return pokemons
 }
 
+/**
+ * ポケモン画像URL取得
+ */
 const getImageUrl = (pokemon: any): string => {
   return pokemon.sprites.other["official-artwork"].front_default
 }
 
+/**
+ * ポケモンの名前を日本語に変換
+ */
 const getName = async (pokemon: any): Promise<string> => {
   const speciesUrl = pokemon.species.url;
   const responseSpecies = await axios.get(speciesUrl);
@@ -86,6 +150,9 @@ const getName = async (pokemon: any): Promise<string> => {
   return name
 }
 
+/**
+ * ポケモンタイプ名を日本語に変換
+ */
 const getTypes = (pokemon: any): string[] => {
   const types = pokemon.types.map((t: PokeAPIType) => {
     const globalTypeName = typeNames.find((typeName: TypeName) => {
@@ -96,6 +163,9 @@ const getTypes = (pokemon: any): string[] => {
   return types
 }
 
+/**
+ * ポケモン日本語タイプ名一覧取得
+ */
 const getTypeNames = async (): Promise<TypeName[]> => {
   const typeSummaries = await axios.get("https://pokeapi.co/api/v2/type")
   const types = []
