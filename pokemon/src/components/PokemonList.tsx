@@ -4,25 +4,39 @@ import { Pokemon, PokeAPIType, TypeName } from "../types/pokemon"
 import { ItemCard } from "./ItemCard"
 import { Box, Button } from "@mui/material";
 import { SearchWordContext } from "../providers/SerchWordProvider";
-import { BsSortAlphaDown, BsSortNumericDown, BsFilter } from "react-icons/bs";
-
-// 全タイプ名の配列(日本語と英語)
-const typeNames: TypeName[] = []
-
-// フィルタ選択されているタイプ名の配列
-const selectedFilterTypes: string[] = []
+import { BsSortAlphaDown, BsSortNumericDown, BsStars } from "react-icons/bs";
 
 export const PokemonList: FC<any> = () => {
   const [pokemons, setPokemons] = useState<Pokemon[]>([])
   const [fullPokemons, setFullPokemons] = useState<Pokemon[]>([])
+  const [masterTypeNames, setMasterTypeNames] = useState<TypeName[]>([])
+  const [selectedFilterTypes, setSelectedFilterTypes] = useState<string[]>([])
   const { searchWord } = useContext(SearchWordContext)
   console.log("searchWord @PokeList", searchWord)
 
   useEffect(() => {
     const fetch = async () => {
-      const types = await getTypeNames()
-      typeNames.push(...types)
-      const pokemons = await getPokemons()
+      const masterTypeNames = await getTypeNames()
+      const res = await axios.get("https://pokeapi.co/api/v2/pokemon?limit=30")
+      const summaries = res.data.results
+      const pokemons: Pokemon[] = []
+      for (const summary of summaries) {
+        const res = await axios.get(
+          `https://pokeapi.co/api/v2/pokemon/${summary.name}`
+        )
+        const pokemon = res.data
+        const name = await getName(pokemon)
+        const url = getImageUrl(pokemon)
+        const types = getTypes(pokemon, masterTypeNames)
+
+        pokemons.push({
+          id: pokemon.id,
+          name,
+          url,
+          types,
+        })
+      }
+      setMasterTypeNames(masterTypeNames)
       setPokemons(pokemons)
       setFullPokemons(pokemons)
     }
@@ -31,11 +45,18 @@ export const PokemonList: FC<any> = () => {
 
 
   /**
+   * ソートとフィルタをリセット
+   */
+  const resetPokemonList = () => {
+    console.log("リセットボタン押下")
+    setPokemons(fullPokemons)
+  }
+
+  /**
    * アイウエオ順にソート
    */
   const sortPokemonListByJapaneseName = () => {
     console.log("アイウエオ順ボタン押下")
-    // 単純にpokemons.sort(...)としたら更新されない。ヒント: in-placeアルゴリズム
     const sorted = [...pokemons].sort((a: Pokemon, b: Pokemon) => {
       return a.name > b.name ? 1 : -1
     })
@@ -59,13 +80,12 @@ export const PokemonList: FC<any> = () => {
    */
   const filterByGrass = (type: string) => {
     console.log("タイプフィルタ押下", type)
-    selectedFilterTypes.push(type)
+    const selected = [...selectedFilterTypes, type]
+    setSelectedFilterTypes(selected)
     const filtered = fullPokemons.filter((pokemon: Pokemon) => {
       let included = false
       for (const type of pokemon.types) {
-        console.log(selectedFilterTypes)
-        if (selectedFilterTypes.includes(type)) {
-          console.log("break", selectedFilterTypes.includes(type))
+        if (selected.includes(type)) {
           included = true
           break
         }
@@ -76,6 +96,52 @@ export const PokemonList: FC<any> = () => {
     setPokemons(filtered)
   }
 
+  /**
+   * ポケモン画像URL取得
+   */
+  const getImageUrl = (pokemon: any): string => {
+    return pokemon.sprites.other["official-artwork"].front_default
+  }
+
+  /**
+   * ポケモンの名前を日本語に変換
+   */
+  const getName = async (pokemon: any): Promise<string> => {
+    const speciesUrl = pokemon.species.url;
+    const responseSpecies = await axios.get(speciesUrl);
+    const names = responseSpecies.data.names;
+    const name = names.find((v: any) => v.language.name == "ja").name
+    return name
+  }
+
+  /**
+   * ポケモンタイプ名を日本語に変換
+   */
+  const getTypes = (pokemon: any, masterTypeNames: TypeName[]): string[] => {
+    const types = pokemon.types.map((t: PokeAPIType) => {
+      const globalTypeName = masterTypeNames.find((typeName: TypeName) => {
+        return typeName.en.toLowerCase() === t.type.name
+      })
+      return globalTypeName?.ja
+    })
+    return types
+  }
+
+  /**
+   * ポケモン日本語タイプ名一覧取得
+   */
+  const getTypeNames = async (): Promise<TypeName[]> => {
+    const typeSummaries = await axios.get("https://pokeapi.co/api/v2/type")
+    const types = []
+    for (const summary of typeSummaries.data.results) {
+      const typeDetail = await axios.get("https://pokeapi.co/api/v2/type/" + summary.name)
+      const globalTypeNames = typeDetail.data.names
+      const en = globalTypeNames.find((n: { language: { name: string } }) => n.language.name === "en")?.name
+      const ja = globalTypeNames.find((n: { language: { name: string } }) => n.language.name === "ja")?.name
+      types.push({ en, ja })
+    }
+    return types
+  }
 
   return (
     <>
@@ -111,6 +177,16 @@ export const PokemonList: FC<any> = () => {
         >
           番号順
         </Button>
+        <Button
+          variant="text"
+          color="secondary"
+          size="large"
+          sx={{ borderRadius: 10 }}
+          startIcon={<BsStars />}
+          onClick={resetPokemonList}
+        >
+          リセット
+        </Button>
       </Box>
       <Box
         sx={{
@@ -124,7 +200,7 @@ export const PokemonList: FC<any> = () => {
           backgroundColor: 'transparent',
         }}
       >
-        {typeNames.map((typename, i) => (
+        {masterTypeNames.map((typename, i) => (
           <Button
             variant="text"
             color="secondary"
@@ -158,77 +234,3 @@ export const PokemonList: FC<any> = () => {
   )
 }
 
-/**
- * ポケモン一覧取得
- */
-const getPokemons = async (): Promise<Pokemon[]> => {
-  const res = await axios.get("https://pokeapi.co/api/v2/pokemon?limit=30")
-  const summaries = res.data.results
-  const pokemons: Pokemon[] = []
-
-  for (const summary of summaries) {
-    const res = await axios.get(
-      `https://pokeapi.co/api/v2/pokemon/${summary.name}`
-    )
-
-    const pokemon = res.data
-    const name = await getName(pokemon)
-    const url = getImageUrl(pokemon)
-    const types = getTypes(pokemon)
-
-    pokemons.push({
-      id: pokemon.id,
-      name,
-      url,
-      types,
-    })
-  }
-  return pokemons
-}
-
-/**
- * ポケモン画像URL取得
- */
-const getImageUrl = (pokemon: any): string => {
-  return pokemon.sprites.other["official-artwork"].front_default
-}
-
-/**
- * ポケモンの名前を日本語に変換
- */
-const getName = async (pokemon: any): Promise<string> => {
-  const speciesUrl = pokemon.species.url;
-  const responseSpecies = await axios.get(speciesUrl);
-  const names = responseSpecies.data.names;
-  const name = names.find((v: any) => v.language.name == "ja").name
-  return name
-}
-
-/**
- * ポケモンタイプ名を日本語に変換
- */
-const getTypes = (pokemon: any): string[] => {
-  const types = pokemon.types.map((t: PokeAPIType) => {
-    const globalTypeName = typeNames.find((typeName: TypeName) => {
-      return typeName.en.toLowerCase() === t.type.name
-    })
-    return globalTypeName?.ja
-  })
-  return types
-}
-
-/**
- * ポケモン日本語タイプ名一覧取得
- */
-const getTypeNames = async (): Promise<TypeName[]> => {
-  const typeSummaries = await axios.get("https://pokeapi.co/api/v2/type")
-  const types = []
-  for (const summary of typeSummaries.data.results) {
-    const typeDetail = await axios.get("https://pokeapi.co/api/v2/type/" + summary.name)
-    const globalTypeNames = typeDetail.data.names
-    const en = globalTypeNames.find((n: { language: { name: string } }) => n.language.name === "en")?.name
-    const ja = globalTypeNames.find((n: { language: { name: string } }) => n.language.name === "ja")?.name
-    types.push({ en, ja })
-  }
-  return types
-}
