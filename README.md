@@ -4,4 +4,4 @@
 
 React + [PokeAPI](https://pokeapi.co/)
 
-![image](https://user-images.githubusercontent.com/44778704/218762495-fbf681fd-c1fd-40a9-a9be-b2edf7ebc9fb.png)
+![image](https://user-images.githubusercontent.com/44778704/219049761-dbbae26c-f599-474b-81cb-19decd6b627a.png)

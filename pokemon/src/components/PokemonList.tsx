@@ -45,17 +45,18 @@ export const PokemonList: FC<any> = () => {
 
 
   /**
-   * ソートとフィルタをリセット
+   * リセット
    */
-  const resetPokemonList = () => {
+  const resetList = () => {
     console.log("リセットボタン押下")
     setPokemons(fullPokemons)
+    setSelectedFilterTypes([])
   }
 
   /**
    * アイウエオ順にソート
    */
-  const sortPokemonListByJapaneseName = () => {
+  const sortByJapanese = () => {
     console.log("アイウエオ順ボタン押下")
     const sorted = [...pokemons].sort((a: Pokemon, b: Pokemon) => {
       return a.name > b.name ? 1 : -1
@@ -66,7 +67,7 @@ export const PokemonList: FC<any> = () => {
   /**
    * 番号順にソート
    */
-  const sortPokemonListById = () => {
+  const sortById = () => {
     console.log("番号順ボタン押下")
     const sorted = [...pokemons].sort((a: Pokemon, b: Pokemon) => {
       return a.id > b.id ? 1 : -1
@@ -78,7 +79,7 @@ export const PokemonList: FC<any> = () => {
   /**
    * タイプフィルタ
    */
-  const filterByGrass = (type: string) => {
+  const filterByType = (type: string) => {
     console.log("タイプフィルタ押下", type)
     const selected = [...selectedFilterTypes, type]
     setSelectedFilterTypes(selected)
@@ -94,6 +95,13 @@ export const PokemonList: FC<any> = () => {
     })
     console.log(filtered)
     setPokemons(filtered)
+  }
+
+  /**
+   * タイプボタン出しわけ
+   */
+  const isSelected = (type: string): boolean => {
+    return selectedFilterTypes.includes(type) ? true : false
   }
 
   /**
@@ -138,7 +146,11 @@ export const PokemonList: FC<any> = () => {
       const globalTypeNames = typeDetail.data.names
       const en = globalTypeNames.find((n: { language: { name: string } }) => n.language.name === "en")?.name
       const ja = globalTypeNames.find((n: { language: { name: string } }) => n.language.name === "ja")?.name
-      types.push({ en, ja })
+
+      // 一部の英語名("???"と"shadow")は日本語がundefinedなので除外
+      if (en && ja) {
+        types.push({ en, ja })
+      }
     }
     return types
   }
@@ -163,7 +175,7 @@ export const PokemonList: FC<any> = () => {
           size="large"
           sx={{ borderRadius: 10 }}
           startIcon={<BsSortAlphaDown />}
-          onClick={sortPokemonListByJapaneseName}
+          onClick={sortByJapanese}
         >
           アイウエオ順
         </Button>
@@ -173,7 +185,7 @@ export const PokemonList: FC<any> = () => {
           size="large"
           sx={{ borderRadius: 10 }}
           startIcon={<BsSortNumericDown />}
-          onClick={sortPokemonListById}
+          onClick={sortById}
         >
           番号順
         </Button>
@@ -183,7 +195,7 @@ export const PokemonList: FC<any> = () => {
           size="large"
           sx={{ borderRadius: 10 }}
           startIcon={<BsStars />}
-          onClick={resetPokemonList}
+          onClick={resetList}
         >
           リセット
         </Button>
@@ -201,15 +213,27 @@ export const PokemonList: FC<any> = () => {
         }}
       >
         {masterTypeNames.map((typename, i) => (
-          <Button
-            variant="text"
-            color="secondary"
-            size="large"
-            sx={{ borderRadius: 10 }}
-            onClick={() => filterByGrass(typename.ja)}
-          >
-            {typename.ja}
-          </Button>
+          <div>
+            {isSelected(typename.ja) && <Button
+              variant="contained"
+              color="secondary"
+              size="large"
+              sx={{ borderRadius: 10 }}
+              onClick={() => filterByType(typename.ja)}
+            >
+              {typename.ja}
+            </Button>}
+            {!isSelected(typename.ja) && <Button
+              variant="text"
+              color="secondary"
+              size="large"
+              sx={{ borderRadius: 10 }}
+              onClick={() => filterByType(typename.ja)}
+            >
+              {typename.ja}
+            </Button>}
+
+          </div>
         ))}
       </Box>
 
