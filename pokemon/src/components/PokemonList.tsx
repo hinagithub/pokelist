@@ -47,11 +47,9 @@ export const PokemonList: FC<any> = () => {
   /**
    * インクリメント検索
    */
-  const handleKeyDown = (e: any): void => {
+  const handleKeyUp = (e: any): void => {
     const key = e.key
-    // Backspaceだとtarget.valueの値が更新されていない状態で渡される..
-    // if (!(key === "Enter" || key === "Backspace" || key === "Delete")) return
-    if (!(key === "Enter" || key === "Backspace")) return
+    if (!(key === "Enter" || key === "Backspace" || key === "Delete")) return
 
     const value = e.target.value
     console.log("検索: ", key, value)
@@ -203,7 +201,7 @@ export const PokemonList: FC<any> = () => {
             placeholder="search"
             variant="outlined"
             onChange={(e: { target: { value: string } }) => setSearchWord(e.target.value)}
-            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(e)}
+            onKeyUp={(e: React.KeyboardEvent<HTMLInputElement>) => handleKeyUp(e)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
