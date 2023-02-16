@@ -43,7 +43,6 @@ export const PokemonList: FC<any> = () => {
     fetch()
   }, [])
 
-
   /**
    * リセット
    */
@@ -75,7 +74,6 @@ export const PokemonList: FC<any> = () => {
     setPokemons(sorted)
   }
 
-
   /**
    * タイプフィルタ
    */
@@ -95,13 +93,6 @@ export const PokemonList: FC<any> = () => {
     })
     console.log(filtered)
     setPokemons(filtered)
-  }
-
-  /**
-   * タイプボタン出しわけ
-   */
-  const isSelected = (type: string): boolean => {
-    return selectedFilterTypes.includes(type) ? true : false
   }
 
   /**
@@ -214,7 +205,7 @@ export const PokemonList: FC<any> = () => {
       >
         {masterTypeNames.map((typename, i) => (
           <div>
-            {isSelected(typename.ja) && <Button
+            {selectedFilterTypes.includes(typename.ja) && <Button
               variant="contained"
               color="secondary"
               size="large"
@@ -223,7 +214,7 @@ export const PokemonList: FC<any> = () => {
             >
               {typename.ja}
             </Button>}
-            {!isSelected(typename.ja) && <Button
+            {!selectedFilterTypes.includes(typename.ja) && <Button
               variant="text"
               color="secondary"
               size="large"
