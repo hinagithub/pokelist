@@ -3,15 +3,17 @@ import axios from "axios"
 import { Pokemon, PokeAPIType, TypeName } from "../types/pokemon"
 import { ItemCard } from "./ItemCard"
 import { Box, Button } from "@mui/material";
-import { SearchWordContext } from "../providers/SerchWordProvider";
 import { BsSortAlphaDown, BsSortNumericDown, BsStars } from "react-icons/bs";
+import { Grid, InputAdornment, TextField } from "@mui/material"
+import { BsSearch } from "react-icons/bs";
 
 export const PokemonList: FC<any> = () => {
   const [pokemons, setPokemons] = useState<Pokemon[]>([])
   const [fullPokemons, setFullPokemons] = useState<Pokemon[]>([])
   const [masterTypeNames, setMasterTypeNames] = useState<TypeName[]>([])
   const [selectedFilterTypes, setSelectedFilterTypes] = useState<string[]>([])
-  const { searchWord } = useContext(SearchWordContext)
+  const [searchWord, setSearchWord] = useState<string>("")
+
   console.log("searchWord @PokeList", searchWord)
 
   useEffect(() => {
@@ -42,6 +44,12 @@ export const PokemonList: FC<any> = () => {
     }
     fetch()
   }, [])
+
+  const handleChange = (input: string) => {
+    // console.log("event @Search.tsx", event.target.value)
+    const word = input.trim()
+    setSearchWord(word)
+  }
 
   /**
    * リセット
@@ -77,7 +85,7 @@ export const PokemonList: FC<any> = () => {
   /**
    * タイプフィルタ
    */
-  const handleClickFilter = (type: string) => {
+  const handleClickFilter = (type: string): void => {
     console.log("タイプフィルタ押下", type)
 
     // すでに選択されていれば削除、なければ追加する
@@ -105,6 +113,17 @@ export const PokemonList: FC<any> = () => {
       return included
     })
     console.log(filtered)
+    setPokemons(filtered)
+  }
+
+  /**
+   * フリーワード検索
+   */
+  const handleInput = (input: string): void => {
+    console.log("関数内　input: ", input)
+    const filtered = pokemons.filter((pokemon: Pokemon) => {
+      return pokemon.name.includes(input)
+    })
     setPokemons(filtered)
   }
 
@@ -161,6 +180,72 @@ export const PokemonList: FC<any> = () => {
 
   return (
     <>
+      <Grid container
+        direction="row"
+        justifyContent="center"
+        alignItems="center">
+        <Grid item>
+          <TextField
+            onChange={(e: any) => handleChange(e.target.value)}
+            sx={{
+              width: "80vw",
+              pt: 10,
+              pb: 5,
+              "& .MuiInputBase-root": {
+                height: 80,
+                fontSize: 40,
+                borderRadius: 10,
+                px: 3
+              }
+            }}
+            id="outlined-basic"
+            variant="outlined"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <BsSearch size={40} />
+                </InputAdornment>
+              ),
+            }}>
+          </TextField>
+        </Grid >
+      </Grid >
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          flexWrap: "wrap",
+          justifyContent: "space-evenly",
+          p: 0,
+          pb: 2,
+          mx: 10,
+          backgroundColor: 'transparent',
+        }}
+      >
+        {masterTypeNames.map((typename, i) => (
+          <div>
+            {selectedFilterTypes.includes(typename.ja) && <Button
+              variant="contained"
+              color="secondary"
+              size="large"
+              sx={{ borderRadius: 10 }}
+              onClick={() => handleClickFilter(typename.ja)}
+            >
+              {typename.ja}
+            </Button>}
+            {!selectedFilterTypes.includes(typename.ja) && <Button
+              variant="text"
+              color="secondary"
+              size="large"
+              sx={{ borderRadius: 10 }}
+              onClick={() => handleClickFilter(typename.ja)}
+            >
+              {typename.ja}
+            </Button>}
+
+          </div>
+        ))}
+      </Box>
       <Box
         sx={{
           display: 'flex',
@@ -203,42 +288,6 @@ export const PokemonList: FC<any> = () => {
         >
           リセット
         </Button>
-      </Box>
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-          flexWrap: "wrap",
-          justifyContent: "space-evenly",
-          p: 0,
-          pb: 2,
-          mx: 10,
-          backgroundColor: 'transparent',
-        }}
-      >
-        {masterTypeNames.map((typename, i) => (
-          <div>
-            {selectedFilterTypes.includes(typename.ja) && <Button
-              variant="contained"
-              color="secondary"
-              size="large"
-              sx={{ borderRadius: 10 }}
-              onClick={() => handleClickFilter(typename.ja)}
-            >
-              {typename.ja}
-            </Button>}
-            {!selectedFilterTypes.includes(typename.ja) && <Button
-              variant="text"
-              color="secondary"
-              size="large"
-              sx={{ borderRadius: 10 }}
-              onClick={() => handleClickFilter(typename.ja)}
-            >
-              {typename.ja}
-            </Button>}
-
-          </div>
-        ))}
       </Box>
 
       <Box
