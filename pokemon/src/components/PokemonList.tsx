@@ -13,7 +13,6 @@ export const PokemonList: FC<any> = () => {
   const [masterTypeNames, setMasterTypeNames] = useState<TypeName[]>([])
   const [selectedFilterTypes, setSelectedFilterTypes] = useState<string[]>([])
   const [searchWord, setSearchWord] = useState<string>("")
-
   console.log("searchWord @PokeList", searchWord)
 
   useEffect(() => {
@@ -45,30 +44,31 @@ export const PokemonList: FC<any> = () => {
     fetch()
   }, [])
 
-  const handleChange = (input: string) => {
-    // console.log("event @Search.tsx", event.target.value)
-    const word = input.trim()
-    setSearchWord(word)
-  }
-
   /**
-   * リセット
+   * インクリメント検索
    */
-  const resetList = () => {
-    console.log("リセットボタン押下")
-    setPokemons(fullPokemons)
-    setSelectedFilterTypes([])
-  }
+  const handleKeyDown = (e: any): void => {
+    const key = e.key
+    // Backspaceだとtarget.valueの値が更新されていない状態で渡される..
+    // if (!(key === "Enter" || key === "Backspace" || key === "Delete")) return
+    if (!(key === "Enter" || key === "Backspace")) return
 
-  /**
-   * アイウエオ順にソート
-   */
-  const sortByJapanese = () => {
-    console.log("アイウエオ順ボタン押下")
-    const sorted = [...pokemons].sort((a: Pokemon, b: Pokemon) => {
-      return a.name > b.name ? 1 : -1
+    const value = e.target.value
+    console.log("検索: ", key, value)
+
+    // 検索ワードがなければリセット
+    if (!value) {
+      console.log("リセット")
+      filterByTypes(selectedFilterTypes)
+      return
+    }
+
+    //検索ワードがあればフィルタ
+    const filtered = fullPokemons.filter((pokemon: Pokemon) => {
+      console.log(pokemon.name.includes(value))
+      return pokemon.name.includes(value)
     })
-    setPokemons(sorted)
+    setPokemons(filtered)
   }
 
   /**
@@ -83,24 +83,49 @@ export const PokemonList: FC<any> = () => {
   }
 
   /**
+   * アイウエオ順にソート
+   */
+  const sortByJapanese = () => {
+    console.log("アイウエオ順ボタン押下")
+    const sorted = [...pokemons].sort((a: Pokemon, b: Pokemon) => {
+      return a.name > b.name ? 1 : -1
+    })
+    setPokemons(sorted)
+  }
+
+  /**
+   * リセット
+   */
+  const resetList = () => {
+    console.log("リセットボタン押下")
+    setPokemons(fullPokemons)
+    setSelectedFilterTypes([])
+  }
+
+  /**
    * タイプフィルタ
    */
   const handleClickFilter = (type: string): void => {
     console.log("タイプフィルタ押下", type)
-
-    // すでに選択されていれば削除、なければ追加する
+    // 選択中のタイプの配列を更新。すでに選択されていれば削除、なければ追加する
     const index = selectedFilterTypes.findIndex((v: string) => v === type)
     const selected = index === -1
       ? [...selectedFilterTypes, type]
       : selectedFilterTypes.filter((v: string) => v !== type)
     setSelectedFilterTypes(selected)
+    // リスト更新
+    filterByTypes(selected)
+  }
 
+  /**
+   * 選択中のタイプでフィルタ
+   */
+  const filterByTypes = (selected: string[]) => {
     // タイプがなにも選択されていなければ全リストにする
     if (selected.length === 0) {
       setPokemons(fullPokemons)
       return
     }
-
     // 一つでもフィルタが設定されていれば絞って表示
     const filtered = fullPokemons.filter((pokemon: Pokemon) => {
       let included = false
@@ -111,18 +136,6 @@ export const PokemonList: FC<any> = () => {
         }
       }
       return included
-    })
-    console.log(filtered)
-    setPokemons(filtered)
-  }
-
-  /**
-   * フリーワード検索
-   */
-  const handleInput = (input: string): void => {
-    console.log("関数内　input: ", input)
-    const filtered = pokemons.filter((pokemon: Pokemon) => {
-      return pokemon.name.includes(input)
     })
     setPokemons(filtered)
   }
@@ -186,7 +199,18 @@ export const PokemonList: FC<any> = () => {
         alignItems="center">
         <Grid item>
           <TextField
-            onChange={(e: any) => handleChange(e.target.value)}
+            id="search"
+            placeholder="search"
+            variant="outlined"
+            onChange={(e: { target: { value: string } }) => setSearchWord(e.target.value)}
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(e)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <BsSearch size={40} />
+                </InputAdornment>
+              ),
+            }}
             sx={{
               width: "80vw",
               pt: 10,
@@ -198,15 +222,7 @@ export const PokemonList: FC<any> = () => {
                 px: 3
               }
             }}
-            id="outlined-basic"
-            variant="outlined"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <BsSearch size={40} />
-                </InputAdornment>
-              ),
-            }}>
+          >
           </TextField>
         </Grid >
       </Grid >
@@ -263,20 +279,20 @@ export const PokemonList: FC<any> = () => {
           color="secondary"
           size="large"
           sx={{ borderRadius: 10 }}
-          startIcon={<BsSortAlphaDown />}
-          onClick={sortByJapanese}
+          startIcon={<BsSortNumericDown />}
+          onClick={sortById}
         >
-          アイウエオ順
+          番号順
         </Button>
         <Button
           variant="text"
           color="secondary"
           size="large"
           sx={{ borderRadius: 10 }}
-          startIcon={<BsSortNumericDown />}
-          onClick={sortById}
+          startIcon={<BsSortAlphaDown />}
+          onClick={sortByJapanese}
         >
-          番号順
+          アイウエオ順
         </Button>
         <Button
           variant="text"
