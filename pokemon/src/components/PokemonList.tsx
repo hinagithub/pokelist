@@ -77,10 +77,23 @@ export const PokemonList: FC<any> = () => {
   /**
    * タイプフィルタ
    */
-  const filterByType = (type: string) => {
+  const handleClickFilter = (type: string) => {
     console.log("タイプフィルタ押下", type)
-    const selected = [...selectedFilterTypes, type]
+
+    // すでに選択されていれば削除、なければ追加する
+    const index = selectedFilterTypes.findIndex((v: string) => v === type)
+    const selected = index === -1
+      ? [...selectedFilterTypes, type]
+      : selectedFilterTypes.filter((v: string) => v !== type)
     setSelectedFilterTypes(selected)
+
+    // タイプがなにも選択されていなければ全リストにする
+    if (selected.length === 0) {
+      setPokemons(fullPokemons)
+      return
+    }
+
+    // 一つでもフィルタが設定されていれば絞って表示
     const filtered = fullPokemons.filter((pokemon: Pokemon) => {
       let included = false
       for (const type of pokemon.types) {
@@ -210,7 +223,7 @@ export const PokemonList: FC<any> = () => {
               color="secondary"
               size="large"
               sx={{ borderRadius: 10 }}
-              onClick={() => filterByType(typename.ja)}
+              onClick={() => handleClickFilter(typename.ja)}
             >
               {typename.ja}
             </Button>}
@@ -219,7 +232,7 @@ export const PokemonList: FC<any> = () => {
               color="secondary"
               size="large"
               sx={{ borderRadius: 10 }}
-              onClick={() => filterByType(typename.ja)}
+              onClick={() => handleClickFilter(typename.ja)}
             >
               {typename.ja}
             </Button>}
