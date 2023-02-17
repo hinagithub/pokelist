@@ -2,10 +2,10 @@ import { FC, useState, useEffect, useContext } from "react"
 import axios from "axios"
 import { Pokemon, PokeAPIType, TypeName } from "../types/pokemon"
 import { ItemCard } from "./ItemCard"
-import { Box, Button } from "@mui/material";
-import { BsSortAlphaDown, BsSortNumericDown, BsStars } from "react-icons/bs";
+import { Box, Button } from "@mui/material"
+import { BsSortAlphaDown, BsSortNumericDown, BsStars } from "react-icons/bs"
 import { Grid, InputAdornment, TextField } from "@mui/material"
-import { BsSearch } from "react-icons/bs";
+import { BsSearch } from "react-icons/bs"
 
 export const PokemonList: FC<any> = () => {
   const [pokemons, setPokemons] = useState<Pokemon[]>([])
@@ -50,23 +50,9 @@ export const PokemonList: FC<any> = () => {
   const handleKeyUp = (e: any): void => {
     const key = e.key
     if (!(key === "Enter" || key === "Backspace" || key === "Delete")) return
-
-    const value = e.target.value
-    console.log("検索: ", key, value)
-
-    // 検索ワードがなければリセット
-    if (!value) {
-      console.log("リセット")
-      filterByTypes(selectedFilterTypes)
-      return
-    }
-
-    //検索ワードがあればフィルタ
-    const filtered = fullPokemons.filter((pokemon: Pokemon) => {
-      console.log(pokemon.name.includes(value))
-      return pokemon.name.includes(value)
-    })
-    setPokemons(filtered)
+    console.log(`${key}キー押下`)
+    const value = e.target.value ? e.target.value : ""
+    filterPokemons(selectedFilterTypes, value)
   }
 
   /**
@@ -103,38 +89,50 @@ export const PokemonList: FC<any> = () => {
   /**
    * タイプフィルタ
    */
-  const handleClickFilter = (type: string): void => {
-    console.log("タイプフィルタ押下", type)
-    // 選択中のタイプの配列を更新。すでに選択されていれば削除、なければ追加する
+  const handleClickType = (type: string): void => {
+    console.log("タイプ押下", type)
+    // 選択中のタイプの配列を更新。すでに選択されていれば削除し、なければ追加する
     const index = selectedFilterTypes.findIndex((v: string) => v === type)
-    const selected = index === -1
-      ? [...selectedFilterTypes, type]
-      : selectedFilterTypes.filter((v: string) => v !== type)
+    const selected =
+      index === -1
+        ? [...selectedFilterTypes, type]
+        : selectedFilterTypes.filter((v: string) => v !== type)
     setSelectedFilterTypes(selected)
-    // リスト更新
-    filterByTypes(selected)
+    filterPokemons(selected, searchWord)
   }
 
   /**
-   * 選択中のタイプでフィルタ
+   * タイプ・検索文字フィルタ
    */
-  const filterByTypes = (selected: string[]) => {
-    // タイプがなにも選択されていなければ全リストにする
-    if (selected.length === 0) {
+  const filterPokemons = (selectedTypes: string[], word: string = "") => {
+    // タイプ・検索文字が設定されていなければ全ポケモンを設定
+    if (selectedTypes.length === 0 && !word) {
       setPokemons(fullPokemons)
       return
     }
-    // 一つでもフィルタが設定されていれば絞って表示
-    const filtered = fullPokemons.filter((pokemon: Pokemon) => {
-      let included = false
-      for (const type of pokemon.types) {
-        if (selected.includes(type)) {
-          included = true
-          break
-        }
-      }
-      return included
-    })
+
+    // まず検索文字でフィルタ
+    const searchedPokemons = word
+      ? fullPokemons.filter((pokemon: Pokemon) => {
+          return pokemon.name.includes(word)
+        })
+      : fullPokemons
+
+    // さらにタイプでフィルタ
+    const filtered =
+      selectedTypes.length === 0
+        ? searchedPokemons
+        : searchedPokemons.filter((pokemon: Pokemon) => {
+            let included = false
+            for (const type of pokemon.types) {
+              if (selectedTypes.includes(type)) {
+                included = true
+                break
+              }
+            }
+            return included
+          })
+
     setPokemons(filtered)
   }
 
@@ -149,9 +147,9 @@ export const PokemonList: FC<any> = () => {
    * ポケモンの名前を日本語に変換
    */
   const getName = async (pokemon: any): Promise<string> => {
-    const speciesUrl = pokemon.species.url;
-    const responseSpecies = await axios.get(speciesUrl);
-    const names = responseSpecies.data.names;
+    const speciesUrl = pokemon.species.url
+    const responseSpecies = await axios.get(speciesUrl)
+    const names = responseSpecies.data.names
     const name = names.find((v: any) => v.language.name == "ja").name
     return name
   }
@@ -176,10 +174,16 @@ export const PokemonList: FC<any> = () => {
     const typeSummaries = await axios.get("https://pokeapi.co/api/v2/type")
     const types = []
     for (const summary of typeSummaries.data.results) {
-      const typeDetail = await axios.get("https://pokeapi.co/api/v2/type/" + summary.name)
+      const typeDetail = await axios.get(
+        "https://pokeapi.co/api/v2/type/" + summary.name
+      )
       const globalTypeNames = typeDetail.data.names
-      const en = globalTypeNames.find((n: { language: { name: string } }) => n.language.name === "en")?.name
-      const ja = globalTypeNames.find((n: { language: { name: string } }) => n.language.name === "ja")?.name
+      const en = globalTypeNames.find(
+        (n: { language: { name: string } }) => n.language.name === "en"
+      )?.name
+      const ja = globalTypeNames.find(
+        (n: { language: { name: string } }) => n.language.name === "ja"
+      )?.name
 
       // 一部の英語名("???"と"shadow")は日本語がundefinedなので除外
       if (en && ja) {
@@ -191,17 +195,23 @@ export const PokemonList: FC<any> = () => {
 
   return (
     <>
-      <Grid container
+      <Grid
+        container
         direction="row"
         justifyContent="center"
-        alignItems="center">
+        alignItems="center"
+      >
         <Grid item>
           <TextField
             id="search"
             placeholder="search"
             variant="outlined"
-            onChange={(e: { target: { value: string } }) => setSearchWord(e.target.value)}
-            onKeyUp={(e: React.KeyboardEvent<HTMLInputElement>) => handleKeyUp(e)}
+            onChange={(e: { target: { value: string } }) =>
+              setSearchWord(e.target.value)
+            }
+            onKeyUp={(e: React.KeyboardEvent<HTMLInputElement>) =>
+              handleKeyUp(e)
+            }
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -217,59 +227,61 @@ export const PokemonList: FC<any> = () => {
                 height: 80,
                 fontSize: 40,
                 borderRadius: 10,
-                px: 3
-              }
+                px: 3,
+              },
             }}
-          >
-          </TextField>
-        </Grid >
-      </Grid >
+          ></TextField>
+        </Grid>
+      </Grid>
       <Box
         sx={{
-          display: 'flex',
-          flexDirection: 'row',
+          display: "flex",
+          flexDirection: "row",
           flexWrap: "wrap",
           justifyContent: "space-evenly",
           p: 0,
           pb: 2,
           mx: 10,
-          backgroundColor: 'transparent',
+          backgroundColor: "transparent",
         }}
       >
         {masterTypeNames.map((typename, i) => (
           <div>
-            {selectedFilterTypes.includes(typename.ja) && <Button
-              variant="contained"
-              color="secondary"
-              size="large"
-              sx={{ borderRadius: 10 }}
-              onClick={() => handleClickFilter(typename.ja)}
-            >
-              {typename.ja}
-            </Button>}
-            {!selectedFilterTypes.includes(typename.ja) && <Button
-              variant="text"
-              color="secondary"
-              size="large"
-              sx={{ borderRadius: 10 }}
-              onClick={() => handleClickFilter(typename.ja)}
-            >
-              {typename.ja}
-            </Button>}
-
+            {selectedFilterTypes.includes(typename.ja) && (
+              <Button
+                variant="contained"
+                color="secondary"
+                size="large"
+                sx={{ borderRadius: 10 }}
+                onClick={() => handleClickType(typename.ja)}
+              >
+                {typename.ja}
+              </Button>
+            )}
+            {!selectedFilterTypes.includes(typename.ja) && (
+              <Button
+                variant="text"
+                color="secondary"
+                size="large"
+                sx={{ borderRadius: 10 }}
+                onClick={() => handleClickType(typename.ja)}
+              >
+                {typename.ja}
+              </Button>
+            )}
           </div>
         ))}
       </Box>
       <Box
         sx={{
-          display: 'flex',
-          flexDirection: 'row',
+          display: "flex",
+          flexDirection: "row",
           flexWrap: "wrap",
           justifyContent: "space-evenly",
           p: 0,
           pb: 2,
           mx: 10,
-          backgroundColor: 'transparent',
+          backgroundColor: "transparent",
         }}
       >
         <Button
@@ -306,22 +318,26 @@ export const PokemonList: FC<any> = () => {
 
       <Box
         sx={{
-          display: 'flex',
-          flexDirection: 'row',
+          display: "flex",
+          flexDirection: "row",
           flexWrap: "wrap",
           justifyContent: "space-evenly",
           p: 0,
           mx: 1,
-          backgroundColor: 'transparent',
+          backgroundColor: "transparent",
         }}
       >
         {pokemons.map((pokemon, i) => (
-          <div style={{ "margin": 10, "padding": 10 }} key={i}>
-            <ItemCard id={pokemon.id} name={pokemon.name} url={pokemon.url} types={pokemon.types}></ItemCard>
+          <div style={{ margin: 10, padding: 10 }} key={i}>
+            <ItemCard
+              id={pokemon.id}
+              name={pokemon.name}
+              url={pokemon.url}
+              types={pokemon.types}
+            ></ItemCard>
           </div>
         ))}
       </Box>
     </>
   )
 }
-
