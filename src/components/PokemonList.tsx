@@ -2,6 +2,7 @@ import { FC, useState, useEffect } from "react"
 import axios from "axios"
 import { Pokemon, PokeAPIType, TypeName } from "../types/pokemon"
 import { ItemCard } from "./ItemCard"
+import { IconBtn } from "./IconBtn"
 import { Box, Button } from "@mui/material"
 import { BsSortAlphaDown, BsSortNumericDown, BsStars } from "react-icons/bs"
 import { Grid } from "@mui/material"
@@ -221,7 +222,7 @@ export const PokemonList: FC<any> = () => {
         }}
       >
         {masterTypeNames.map((typename, i) => (
-          <div>
+          <div key={i}>
             {selectedFilterTypes.includes(typename.ja) && (
               <Button
                 variant="contained"
@@ -259,36 +260,9 @@ export const PokemonList: FC<any> = () => {
           backgroundColor: "transparent",
         }}
       >
-        <Button
-          variant="text"
-          color="secondary"
-          size="large"
-          sx={{ borderRadius: 10 }}
-          startIcon={<BsSortNumericDown />}
-          onClick={sortById}
-        >
-          番号順
-        </Button>
-        <Button
-          variant="text"
-          color="secondary"
-          size="large"
-          sx={{ borderRadius: 10 }}
-          startIcon={<BsSortAlphaDown />}
-          onClick={sortByJapanese}
-        >
-          アイウエオ順
-        </Button>
-        <Button
-          variant="text"
-          color="secondary"
-          size="large"
-          sx={{ borderRadius: 10 }}
-          startIcon={<BsStars />}
-          onClick={resetList}
-        >
-          リセット
-        </Button>
+        <IconBtn icon={<BsSortNumericDown />} func={sortById}>番号順</IconBtn>
+        <IconBtn icon={<BsSortAlphaDown />} func={sortByJapanese}>アイウエオ順</IconBtn>
+        <IconBtn icon={<BsStars />} func={resetList}>リセット</IconBtn>
       </Box>
 
       <Box
