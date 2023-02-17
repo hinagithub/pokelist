@@ -1,11 +1,11 @@
-import { FC, useState, useEffect, useContext } from "react"
+import { FC, useState, useEffect } from "react"
 import axios from "axios"
 import { Pokemon, PokeAPIType, TypeName } from "../types/pokemon"
 import { ItemCard } from "./ItemCard"
 import { Box, Button } from "@mui/material"
 import { BsSortAlphaDown, BsSortNumericDown, BsStars } from "react-icons/bs"
-import { Grid, InputAdornment, TextField } from "@mui/material"
-import { BsSearch } from "react-icons/bs"
+import { Grid } from "@mui/material"
+import { Search } from "./Search"
 
 export const PokemonList: FC<any> = () => {
   const [pokemons, setPokemons] = useState<Pokemon[]>([])
@@ -13,7 +13,6 @@ export const PokemonList: FC<any> = () => {
   const [masterTypeNames, setMasterTypeNames] = useState<TypeName[]>([])
   const [selectedFilterTypes, setSelectedFilterTypes] = useState<string[]>([])
   const [searchWord, setSearchWord] = useState<string>("")
-  console.log("searchWord @PokeList", searchWord)
 
   useEffect(() => {
     const fetch = async () => {
@@ -114,8 +113,8 @@ export const PokemonList: FC<any> = () => {
     // まず検索文字でフィルタ
     const searchedPokemons = word
       ? fullPokemons.filter((pokemon: Pokemon) => {
-          return pokemon.name.includes(word)
-        })
+        return pokemon.name.includes(word)
+      })
       : fullPokemons
 
     // さらにタイプでフィルタ
@@ -123,15 +122,15 @@ export const PokemonList: FC<any> = () => {
       selectedTypes.length === 0
         ? searchedPokemons
         : searchedPokemons.filter((pokemon: Pokemon) => {
-            let included = false
-            for (const type of pokemon.types) {
-              if (selectedTypes.includes(type)) {
-                included = true
-                break
-              }
+          let included = false
+          for (const type of pokemon.types) {
+            if (selectedTypes.includes(type)) {
+              included = true
+              break
             }
-            return included
-          })
+          }
+          return included
+        })
 
     setPokemons(filtered)
   }
@@ -202,35 +201,11 @@ export const PokemonList: FC<any> = () => {
         alignItems="center"
       >
         <Grid item>
-          <TextField
-            id="search"
-            placeholder="search"
-            variant="outlined"
-            onChange={(e: { target: { value: string } }) =>
-              setSearchWord(e.target.value)
-            }
-            onKeyUp={(e: React.KeyboardEvent<HTMLInputElement>) =>
-              handleKeyUp(e)
-            }
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <BsSearch size={40} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              width: "80vw",
-              pt: 10,
-              pb: 5,
-              "& .MuiInputBase-root": {
-                height: 80,
-                fontSize: 40,
-                borderRadius: 10,
-                px: 3,
-              },
-            }}
-          ></TextField>
+          <Search
+            searchWord={searchWord}
+            setSearchWord={setSearchWord}
+            handleKeyUp={handleKeyUp}
+          ></Search>
         </Grid>
       </Grid>
       <Box
