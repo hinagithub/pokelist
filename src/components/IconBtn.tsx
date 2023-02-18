@@ -13,7 +13,7 @@ export const IconBtn = (props: Props) => {
             variant="text"
             color="secondary"
             size="large"
-            sx={{ borderRadius: 10 }}
+            sx={{ borderRadius: 10, color: "#443C68", fontSize: "1.2rem" }}
             startIcon={icon}
             onClick={func}
         >
