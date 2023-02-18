@@ -1,6 +1,6 @@
 import { FC, useState, useEffect } from "react"
 import axios from "axios"
-import { api } from "../api/api"
+import { api } from "../api/pokemon"
 import { Pokemon, PokeAPIType, TypeName } from "../types/pokemon"
 import { ItemCard } from "./ItemCard"
 import { IconBtn } from "./IconBtn"
@@ -24,7 +24,7 @@ export const PokemonList: FC<any> = () => {
   useEffect(() => {
     const fetch = async () => {
       const masterTypeNames = await getTypeNames()
-      const data = await api.getPokemonSumarries()
+      const data = await api.getPokemonSumarries(151)
       const pokemonSummary = data.results
       const pokemons: Pokemon[] = []
       for (const summary of pokemonSummary) {
