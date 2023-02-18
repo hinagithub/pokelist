@@ -1,5 +1,6 @@
 import { FC, useState, useEffect } from "react"
 import axios from "axios"
+import { api } from "../api/api"
 import { Pokemon, PokeAPIType, TypeName } from "../types/pokemon"
 import { ItemCard } from "./ItemCard"
 import { IconBtn } from "./IconBtn"
@@ -9,27 +10,28 @@ import { Grid } from "@mui/material"
 import { Search } from "./Search"
 
 export const PokemonList: FC<any> = () => {
-  const [pokemons, setPokemons] = useState<Pokemon[]>([])
+  // 全ポケモン一覧
   const [fullPokemons, setFullPokemons] = useState<Pokemon[]>([])
+  // 表示中のポケモン一覧
+  const [pokemons, setPokemons] = useState<Pokemon[]>([])
+  // 全タイプ一覧
   const [masterTypeNames, setMasterTypeNames] = useState<TypeName[]>([])
+  // 選択中のタイプ一覧
   const [selectedFilterTypes, setSelectedFilterTypes] = useState<string[]>([])
+  // 入力されている検索ワード
   const [searchWord, setSearchWord] = useState<string>("")
 
   useEffect(() => {
     const fetch = async () => {
       const masterTypeNames = await getTypeNames()
-      const res = await axios.get("https://pokeapi.co/api/v2/pokemon?limit=30")
-      const summaries = res.data.results
+      const data = await api.getPokemonSumarries()
+      const pokemonSummary = data.results
       const pokemons: Pokemon[] = []
-      for (const summary of summaries) {
-        const res = await axios.get(
-          `https://pokeapi.co/api/v2/pokemon/${summary.name}`
-        )
-        const pokemon = res.data
+      for (const summary of pokemonSummary) {
+        const pokemon = await api.getPokemonDetail(summary.name)
         const name = await getName(pokemon)
         const url = getImageUrl(pokemon)
         const types = getTypes(pokemon, masterTypeNames)
-
         pokemons.push({
           id: pokemon.id,
           name,
@@ -50,7 +52,7 @@ export const PokemonList: FC<any> = () => {
   const handleKeyUp = (e: any): void => {
     const key = e.key
     if (!(key === "Enter" || key === "Backspace" || key === "Delete")) return
-    console.log(`${key}キー押下`)
+    console.log(`[DEBUG] ${key}キー押下`)
     const value = e.target.value ? e.target.value : ""
     filterPokemons(selectedFilterTypes, value)
   }
@@ -59,7 +61,7 @@ export const PokemonList: FC<any> = () => {
    * 番号順にソート
    */
   const sortById = () => {
-    console.log("番号順ボタン押下")
+    console.log("[DEBUG] 番号順ボタン押下")
     const sorted = [...pokemons].sort((a: Pokemon, b: Pokemon) => {
       return a.id > b.id ? 1 : -1
     })
@@ -70,7 +72,7 @@ export const PokemonList: FC<any> = () => {
    * アイウエオ順にソート
    */
   const sortByJapanese = () => {
-    console.log("アイウエオ順ボタン押下")
+    console.log("[DEBUG] アイウエオ順ボタン押下")
     const sorted = [...pokemons].sort((a: Pokemon, b: Pokemon) => {
       return a.name > b.name ? 1 : -1
     })
@@ -81,7 +83,7 @@ export const PokemonList: FC<any> = () => {
    * リセット
    */
   const resetList = () => {
-    console.log("リセットボタン押下")
+    console.log("[DEBUG] リセットボタン押下")
     setPokemons(fullPokemons)
     setSelectedFilterTypes([])
   }
@@ -90,7 +92,7 @@ export const PokemonList: FC<any> = () => {
    * タイプフィルタ
    */
   const handleClickType = (type: string): void => {
-    console.log("タイプ押下", type)
+    console.log("[DEBUG] タイプ押下", type)
     // 選択中のタイプの配列を更新。すでに選択されていれば削除し、なければ追加する
     const index = selectedFilterTypes.findIndex((v: string) => v === type)
     const selected =
@@ -147,11 +149,10 @@ export const PokemonList: FC<any> = () => {
    * ポケモンの名前を日本語に変換
    */
   const getName = async (pokemon: any): Promise<string> => {
-    const speciesUrl = pokemon.species.url
-    const responseSpecies = await axios.get(speciesUrl)
-    const names = responseSpecies.data.names
-    const name = names.find((v: any) => v.language.name == "ja").name
-    return name
+    const species = await api.getSpecies(pokemon.id)
+    const names = species.names
+    const japaneseName = names.find((v: any) => v.language.name == "ja").name
+    return japaneseName
   }
 
   /**
@@ -171,13 +172,12 @@ export const PokemonList: FC<any> = () => {
    * ポケモン日本語タイプ名一覧取得
    */
   const getTypeNames = async (): Promise<TypeName[]> => {
-    const typeSummaries = await axios.get("https://pokeapi.co/api/v2/type")
+    // const typeSummaries = await axios.get("https://pokeapi.co/api/v2/type")
+    const typeSummaries = await api.getTypeSummaries()
     const types = []
-    for (const summary of typeSummaries.data.results) {
-      const typeDetail = await axios.get(
-        "https://pokeapi.co/api/v2/type/" + summary.name
-      )
-      const globalTypeNames = typeDetail.data.names
+    for (const typeSummary of typeSummaries.results) {
+      const typeDetail = await api.getTypeDetail(typeSummary.name)
+      const globalTypeNames = typeDetail.names
       const en = globalTypeNames.find(
         (n: { language: { name: string } }) => n.language.name === "en"
       )?.name
