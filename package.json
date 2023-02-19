@@ -2,7 +2,7 @@
   "name": "pokemon",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://hinagithub.github.io/pokelist/",
+  "homepage": "https://hinagithub.github.io/pokelist",
   "dependencies": {
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
@@ -27,7 +27,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "format": "prettier --write ./src/**/*.{ts,tsx}"
+    "format": "prettier --write ./src/**/*.{ts,tsx}",
+    "git": "git add . && git commit -m 'Update gh-pages' && git push origin main",
+    "deploy": "rm -rf docs && npm run build && mv build docs && npm run git"
   },
   "eslintConfig": {
     "extends": [

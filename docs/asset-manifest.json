@@ -1,0 +1,10 @@
+{
+  "files": {
+    "main.js": "/pokelist/static/js/main.172b3950.js",
+    "index.html": "/pokelist/index.html",
+    "main.172b3950.js.map": "/pokelist/static/js/main.172b3950.js.map"
+  },
+  "entrypoints": [
+    "static/js/main.172b3950.js"
+  ]
+}
