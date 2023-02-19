@@ -2,12 +2,13 @@ import { FC, useState, useEffect } from "react"
 import axios from "axios"
 import { Pokemon, PokeAPIType, TypeName } from "../types/pokemon"
 import { ItemCard } from "./ItemCard"
-import { Box, Button } from "@mui/material"
+import { Box, Button, CircularProgress } from "@mui/material"
 import { BsSortAlphaDown, BsSortNumericDown, BsStars } from "react-icons/bs"
 import { Grid } from "@mui/material"
 import { Search } from "./Search"
 
 export const PokemonList: FC<any> = () => {
+  const [isLoading, setIsLoading] = useState(false);
   const [pokemons, setPokemons] = useState<Pokemon[]>([])
   const [fullPokemons, setFullPokemons] = useState<Pokemon[]>([])
   const [masterTypeNames, setMasterTypeNames] = useState<TypeName[]>([])
@@ -16,6 +17,7 @@ export const PokemonList: FC<any> = () => {
 
   useEffect(() => {
     const fetch = async () => {
+      setIsLoading(true);
       const masterTypeNames = await getTypeNames()
       const res = await axios.get("https://pokeapi.co/api/v2/pokemon?limit=30")
       const summaries = res.data.results
@@ -39,6 +41,7 @@ export const PokemonList: FC<any> = () => {
       setMasterTypeNames(masterTypeNames)
       setPokemons(pokemons)
       setFullPokemons(pokemons)
+      setIsLoading(false);
     }
     fetch()
   }, [])
@@ -291,28 +294,46 @@ export const PokemonList: FC<any> = () => {
         </Button>
       </Box>
 
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "wrap",
-          justifyContent: "space-evenly",
-          p: 0,
-          mx: 1,
-          backgroundColor: "transparent",
-        }}
-      >
-        {pokemons.map((pokemon, i) => (
-          <div style={{ margin: 10, padding: 10 }} key={i}>
-            <ItemCard
-              id={pokemon.id}
-              name={pokemon.name}
-              url={pokemon.url}
-              types={pokemon.types}
-            ></ItemCard>
-          </div>
-        ))}
-      </Box>
+      {isLoading && (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            flexWrap: "wrap",
+            justifyContent: "Center",
+            minHeight: 200,
+            p: 0,
+            pt: "18%",
+            mx: 1,
+          }}
+        >
+          <CircularProgress size="5rem" color="secondary" sx={{ color: "rgba(255, 255, 255, 0.3)", animationDuration: '1000ms', margin: 0 }} />
+        </Box>
+      )}
+
+      {!isLoading && (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            flexWrap: "wrap",
+            justifyContent: "space-evenly",
+            p: 0,
+            mx: 1,
+          }}
+        >
+          {pokemons.map((pokemon, i) => (
+            <div style={{ margin: 10, padding: 10 }} key={i}>
+              <ItemCard
+                id={pokemon.id}
+                name={pokemon.name}
+                url={pokemon.url}
+                types={pokemon.types}
+              ></ItemCard>
+            </div>
+          ))}
+        </Box>
+      )}
     </>
   )
 }
