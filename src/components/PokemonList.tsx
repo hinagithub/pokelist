@@ -1,16 +1,16 @@
-import { FC, useState, useEffect } from "react"
-import { api } from "../api/pokemon"
-import { Pokemon, PokeAPIType, TypeName } from "../types/pokemon"
-import { ItemCard } from "./ItemCard"
-import { IconBtn } from "./IconBtn"
-import { Box, Button, CircularProgress } from "@mui/material"
-import { BsSortAlphaDown, BsSortNumericDown, BsStars } from "react-icons/bs"
-import { Grid } from "@mui/material"
-import { Search } from "./Search"
+import { FC, useState, useEffect } from 'react'
+import { api } from '../api/pokemon'
+import { Pokemon, PokeAPIType, TypeName } from '../types/pokemon'
+import { ItemCard } from './ItemCard'
+import { IconBtn } from './IconBtn'
+import { Box, Button, CircularProgress } from '@mui/material'
+import { BsSortAlphaDown, BsSortNumericDown, BsStars } from 'react-icons/bs'
+import { Grid } from '@mui/material'
+import { Search } from './Search'
 
 export const PokemonList: FC<any> = () => {
   // ローディング
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
   // 全ポケモン一覧
   const [fullPokemons, setFullPokemons] = useState<Pokemon[]>([])
   // 表示中のポケモン一覧
@@ -20,11 +20,11 @@ export const PokemonList: FC<any> = () => {
   // 選択中のタイプ一覧
   const [selectedFilterTypes, setSelectedFilterTypes] = useState<string[]>([])
   // 入力されている検索ワード
-  const [searchWord, setSearchWord] = useState<string>("")
+  const [searchWord, setSearchWord] = useState<string>('')
 
   useEffect(() => {
     const fetch = async () => {
-      setIsLoading(true);
+      setIsLoading(true)
       const masterTypeNames = await getTypeNames()
       const data = await api.getPokemonSumarries(151)
       const pokemonSummary = data.results
@@ -44,7 +44,7 @@ export const PokemonList: FC<any> = () => {
       setMasterTypeNames(masterTypeNames)
       setPokemons(pokemons)
       setFullPokemons(pokemons)
-      setIsLoading(false);
+      setIsLoading(false)
     }
     fetch()
   }, [])
@@ -54,9 +54,9 @@ export const PokemonList: FC<any> = () => {
    */
   const handleKeyUp = (e: any): void => {
     const key = e.key
-    if (!(key === "Enter" || key === "Backspace" || key === "Delete")) return
+    if (!(key === 'Enter' || key === 'Backspace' || key === 'Delete')) return
     console.log(`[DEBUG] ${key}キー押下`)
-    const value = e.target.value ? e.target.value : ""
+    const value = e.target.value ? e.target.value : ''
     filterPokemons(selectedFilterTypes, value)
   }
 
@@ -64,7 +64,7 @@ export const PokemonList: FC<any> = () => {
    * 番号順にソート
    */
   const sortById = () => {
-    console.log("[DEBUG] 番号順ボタン押下")
+    console.log('[DEBUG] 番号順ボタン押下')
     const sorted = [...pokemons].sort((a: Pokemon, b: Pokemon) => {
       return a.id > b.id ? 1 : -1
     })
@@ -75,7 +75,7 @@ export const PokemonList: FC<any> = () => {
    * アイウエオ順にソート
    */
   const sortByJapanese = () => {
-    console.log("[DEBUG] アイウエオ順ボタン押下")
+    console.log('[DEBUG] アイウエオ順ボタン押下')
     const sorted = [...pokemons].sort((a: Pokemon, b: Pokemon) => {
       return a.name > b.name ? 1 : -1
     })
@@ -86,7 +86,7 @@ export const PokemonList: FC<any> = () => {
    * リセット
    */
   const resetList = () => {
-    console.log("[DEBUG] リセットボタン押下")
+    console.log('[DEBUG] リセットボタン押下')
     setPokemons(fullPokemons)
     setSelectedFilterTypes([])
   }
@@ -95,7 +95,7 @@ export const PokemonList: FC<any> = () => {
    * タイプフィルタ
    */
   const handleClickType = (type: string): void => {
-    console.log("[DEBUG] タイプ押下", type)
+    console.log('[DEBUG] タイプ押下', type)
     // 選択中のタイプの配列を更新。すでに選択されていれば削除し、なければ追加する
     const index = selectedFilterTypes.findIndex((v: string) => v === type)
     const selected =
@@ -109,7 +109,7 @@ export const PokemonList: FC<any> = () => {
   /**
    * タイプ・検索文字フィルタ
    */
-  const filterPokemons = (selectedTypes: string[], word: string = "") => {
+  const filterPokemons = (selectedTypes: string[], word: string = '') => {
     // タイプ・検索文字が設定されていなければ全ポケモンを設定
     if (selectedTypes.length === 0 && !word) {
       setPokemons(fullPokemons)
@@ -119,8 +119,8 @@ export const PokemonList: FC<any> = () => {
     // まず検索文字でフィルタ
     const searchedPokemons = word
       ? fullPokemons.filter((pokemon: Pokemon) => {
-        return pokemon.name.includes(word)
-      })
+          return pokemon.name.includes(word)
+        })
       : fullPokemons
 
     // さらにタイプでフィルタ
@@ -128,15 +128,15 @@ export const PokemonList: FC<any> = () => {
       selectedTypes.length === 0
         ? searchedPokemons
         : searchedPokemons.filter((pokemon: Pokemon) => {
-          let included = false
-          for (const type of pokemon.types) {
-            if (selectedTypes.includes(type)) {
-              included = true
-              break
+            let included = false
+            for (const type of pokemon.types) {
+              if (selectedTypes.includes(type)) {
+                included = true
+                break
+              }
             }
-          }
-          return included
-        })
+            return included
+          })
 
     setPokemons(filtered)
   }
@@ -145,7 +145,7 @@ export const PokemonList: FC<any> = () => {
    * ポケモン画像URL取得
    */
   const getImageUrl = (pokemon: any): string => {
-    return pokemon.sprites.other["official-artwork"].front_default
+    return pokemon.sprites.other['official-artwork'].front_default
   }
 
   /**
@@ -154,7 +154,7 @@ export const PokemonList: FC<any> = () => {
   const getName = async (pokemon: any): Promise<string> => {
     const species = await api.getSpecies(pokemon.id)
     const names = species.names
-    const japaneseName = names.find((v: any) => v.language.name == "ja").name
+    const japaneseName = names.find((v: any) => v.language.name == 'ja').name
     return japaneseName
   }
 
@@ -181,10 +181,10 @@ export const PokemonList: FC<any> = () => {
       const typeDetail = await api.getTypeDetail(typeSummary.name)
       const globalTypeNames = typeDetail.names
       const en = globalTypeNames.find(
-        (n: { language: { name: string } }) => n.language.name === "en"
+        (n: { language: { name: string } }) => n.language.name === 'en',
       )?.name
       const ja = globalTypeNames.find(
-        (n: { language: { name: string } }) => n.language.name === "ja"
+        (n: { language: { name: string } }) => n.language.name === 'ja',
       )?.name
 
       // 一部の英語名("???"と"shadow")は日本語がundefinedなので除外
@@ -197,12 +197,7 @@ export const PokemonList: FC<any> = () => {
 
   return (
     <>
-      <Grid
-        container
-        direction="row"
-        justifyContent="center"
-        alignItems="center"
-      >
+      <Grid container direction="row" justifyContent="center" alignItems="center">
         <Grid item>
           <Search
             searchWord={searchWord}
@@ -213,14 +208,14 @@ export const PokemonList: FC<any> = () => {
       </Grid>
       <Box
         sx={{
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "wrap",
-          justifyContent: "space-evenly",
+          display: 'flex',
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          justifyContent: 'space-evenly',
           p: 0,
           pb: 2,
           mx: 10,
-          backgroundColor: "transparent",
+          backgroundColor: 'transparent',
         }}
       >
         {masterTypeNames.map((typename, i) => (
@@ -252,45 +247,59 @@ export const PokemonList: FC<any> = () => {
       </Box>
       <Box
         sx={{
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "wrap",
-          justifyContent: "space-evenly",
+          display: 'flex',
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          justifyContent: 'space-evenly',
           p: 0,
           pb: 2,
           mx: 10,
-          backgroundColor: "transparent",
+          backgroundColor: 'transparent',
         }}
       >
-        <IconBtn icon={<BsSortNumericDown />} func={sortById}>番号順</IconBtn>
-        <IconBtn icon={<BsSortAlphaDown />} func={sortByJapanese}>アイウエオ順</IconBtn>
-        <IconBtn icon={<BsStars />} func={resetList}>リセット</IconBtn>
+        <IconBtn icon={<BsSortNumericDown />} func={sortById}>
+          番号順
+        </IconBtn>
+        <IconBtn icon={<BsSortAlphaDown />} func={sortByJapanese}>
+          アイウエオ順
+        </IconBtn>
+        <IconBtn icon={<BsStars />} func={resetList}>
+          リセット
+        </IconBtn>
       </Box>
 
       {isLoading && (
         <Box
           sx={{
-            display: "flex",
-            flexDirection: "row",
-            flexWrap: "wrap",
-            justifyContent: "Center",
+            display: 'flex',
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            justifyContent: 'Center',
             minHeight: 200,
             p: 0,
-            pt: "18%",
+            pt: '18%',
             mx: 1,
           }}
         >
-          <CircularProgress size="5rem" color="secondary" sx={{ color: "rgba(255, 255, 255, 0.3)", animationDuration: '1000ms', margin: 0 }} />
+          <CircularProgress
+            size="5rem"
+            color="secondary"
+            sx={{
+              color: 'rgba(255, 255, 255, 0.3)',
+              animationDuration: '1000ms',
+              margin: 0,
+            }}
+          />
         </Box>
       )}
 
       {!isLoading && (
         <Box
           sx={{
-            display: "flex",
-            flexDirection: "row",
-            flexWrap: "wrap",
-            justifyContent: "space-evenly",
+            display: 'flex',
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            justifyContent: 'space-evenly',
             p: 0,
             mx: 1,
           }}
