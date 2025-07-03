@@ -1,4 +1,4 @@
-import { FC, useState, useEffect } from 'react'
+import { FC, useState, useEffect, useRef } from 'react'
 import { api } from '../api/pokemon'
 import { Pokemon, PokeAPIType, TypeName } from '../types/pokemon'
 import { ItemCard } from './ItemCard'
@@ -9,8 +9,8 @@ import { Grid } from '@mui/material'
 import { Search } from './Search'
 
 export const PokemonList: FC<any> = () => {
-  // ローディング
-  const [isLoading, setIsLoading] = useState(false)
+  // ローディング（最初の1匹目が取得されるまで）
+  const [isLoading, setIsLoading] = useState(true)
   // 全ポケモン一覧
   const [fullPokemons, setFullPokemons] = useState<Pokemon[]>([])
   // 表示中のポケモン一覧
@@ -21,33 +21,139 @@ export const PokemonList: FC<any> = () => {
   const [selectedFilterTypes, setSelectedFilterTypes] = useState<string[]>([])
   // 入力されている検索ワード
   const [searchWord, setSearchWord] = useState<string>('')
+  // 読み込み進捗
+  const [loadingProgress, setLoadingProgress] = useState<{current: number, total: number}>({current: 0, total: 151})
+  
+  // 現在のソート状態を管理
+  const [currentSortType, setCurrentSortType] = useState<'none' | 'id' | 'name'>('none')
+  
+  // 現在のフィルタ状態をrefで管理（非同期処理での参照用）
+  const currentFiltersRef = useRef({
+    selectedTypes: selectedFilterTypes,
+    searchWord: searchWord,
+    sortType: currentSortType
+  })
+  
+  // フィルタ状態が変更されたらrefを更新
+  useEffect(() => {
+    currentFiltersRef.current = {
+      selectedTypes: selectedFilterTypes,
+      searchWord: searchWord,
+      sortType: currentSortType
+    }
+  }, [selectedFilterTypes, searchWord, currentSortType])
 
   useEffect(() => {
-    const fetch = async () => {
-      setIsLoading(true)
+    const fetchPokemonsSequentially = async () => {
+      // まずタイプ一覧を取得
       const masterTypeNames = await getTypeNames()
+      setMasterTypeNames(masterTypeNames)
+      
+      // ポケモン一覧の基本情報を取得
       const data = await api.getPokemonSumarries(151)
       const pokemonSummary = data.results
-      const pokemons: Pokemon[] = []
-      for (const summary of pokemonSummary) {
-        const pokemon = await api.getPokemonDetail(summary.name)
-        const name = await getName(pokemon)
-        const url = getImageUrl(pokemon)
-        const types = getTypes(pokemon, masterTypeNames)
-        pokemons.push({
-          id: pokemon.id,
-          name,
-          url,
-          types,
-        })
+      
+      // 順次ポケモンを取得して表示
+      for (let i = 0; i < pokemonSummary.length; i++) {
+        const summary = pokemonSummary[i]
+        
+        try {
+          const pokemon = await api.getPokemonDetail(summary.name)
+          const name = await getName(pokemon)
+          const url = getImageUrl(pokemon)
+          const types = getTypes(pokemon, masterTypeNames)
+          
+          const newPokemon: Pokemon = {
+            id: pokemon.id,
+            name,
+            url,
+            types,
+          }
+          
+          // 1匹ずつ配列に追加
+          setFullPokemons(prev => {
+            // 重複チェック：既に同じIDのポケモンが存在するかチェック
+            const alreadyExists = prev.some(existingPokemon => existingPokemon.id === newPokemon.id)
+            if (alreadyExists) {
+              return prev // 既に存在する場合は追加しない
+            }
+            
+            const updated = [...prev, newPokemon]
+            // 現在のフィルタ条件に合致するかチェック
+            const shouldShowPokemon = checkPokemonMatchesCurrentFilter(newPokemon)
+            if (shouldShowPokemon) {
+              setPokemons(prevPokemons => {
+                // 表示用リストでも重複チェック
+                const alreadyInDisplay = prevPokemons.some(p => p.id === newPokemon.id)
+                if (!alreadyInDisplay) {
+                  const newList = [...prevPokemons, newPokemon]
+                  // 現在のソート状態を適用
+                  return applySortToPokemonArray(newList, currentFiltersRef.current.sortType)
+                }
+                return prevPokemons
+              })
+            }
+            return updated
+          })
+          setLoadingProgress({current: i + 1, total: pokemonSummary.length})
+          
+          // 最初の1匹が取得できたらローディング画面を終了
+          if (i === 0) {
+            setIsLoading(false)
+          }
+        } catch (error) {
+          console.error(`ポケモン ${summary.name} の取得に失敗:`, error)
+          setLoadingProgress({current: i + 1, total: pokemonSummary.length})
+        }
       }
-      setMasterTypeNames(masterTypeNames)
-      setPokemons(pokemons)
-      setFullPokemons(pokemons)
-      setIsLoading(false)
     }
-    fetch()
+    
+    fetchPokemonsSequentially()
   }, [])
+
+  /**
+   * 配列にソートを適用
+   */
+  const applySortToPokemonArray = (pokemonArray: Pokemon[], sortType: 'none' | 'id' | 'name'): Pokemon[] => {
+    if (sortType === 'none') return pokemonArray
+    
+    return [...pokemonArray].sort((a: Pokemon, b: Pokemon) => {
+      if (sortType === 'id') {
+        return a.id - b.id
+      } else if (sortType === 'name') {
+        return a.name.localeCompare(b.name)
+      }
+      return 0
+    })
+  }
+
+  /**
+   * ポケモンが現在のフィルタ条件に合致するかチェック
+   */
+  const checkPokemonMatchesCurrentFilter = (pokemon: Pokemon): boolean => {
+    const { selectedTypes, searchWord } = currentFiltersRef.current
+    
+    // 検索文字のチェック
+    if (searchWord && !pokemon.name.includes(searchWord)) {
+      return false
+    }
+    
+    // タイプフィルタのチェック
+    if (selectedTypes.length > 0) {
+      let typeMatches = false
+      for (const type of pokemon.types) {
+        if (selectedTypes.includes(type)) {
+          typeMatches = true
+          break
+        }
+      }
+      if (!typeMatches) {
+        return false
+      }
+    }
+    
+    return true
+  }
 
   /**
    * インクリメント検索
@@ -65,9 +171,8 @@ export const PokemonList: FC<any> = () => {
    */
   const sortById = () => {
     console.log('[DEBUG] 番号順ボタン押下')
-    const sorted = [...pokemons].sort((a: Pokemon, b: Pokemon) => {
-      return a.id > b.id ? 1 : -1
-    })
+    setCurrentSortType('id')
+    const sorted = applySortToPokemonArray(pokemons, 'id')
     setPokemons(sorted)
   }
 
@@ -76,9 +181,8 @@ export const PokemonList: FC<any> = () => {
    */
   const sortByJapanese = () => {
     console.log('[DEBUG] アイウエオ順ボタン押下')
-    const sorted = [...pokemons].sort((a: Pokemon, b: Pokemon) => {
-      return a.name > b.name ? 1 : -1
-    })
+    setCurrentSortType('name')
+    const sorted = applySortToPokemonArray(pokemons, 'name')
     setPokemons(sorted)
   }
 
@@ -87,6 +191,7 @@ export const PokemonList: FC<any> = () => {
    */
   const resetList = () => {
     console.log('[DEBUG] リセットボタン押下')
+    setCurrentSortType('none')
     setPokemons(fullPokemons)
     setSelectedFilterTypes([])
   }
@@ -294,27 +399,55 @@ export const PokemonList: FC<any> = () => {
       )}
 
       {!isLoading && (
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            justifyContent: 'space-evenly',
-            p: 0,
-            mx: 1,
-          }}
-        >
-          {pokemons.map((pokemon, i) => (
-            <div style={{ margin: 10, padding: 10 }} key={i}>
-              <ItemCard
-                id={pokemon.id}
-                name={pokemon.name}
-                url={pokemon.url}
-                types={pokemon.types}
-              ></ItemCard>
-            </div>
-          ))}
-        </Box>
+        <>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              justifyContent: 'space-evenly',
+              p: 0,
+              mx: 1,
+            }}
+          >
+            {pokemons.map((pokemon) => (
+              <div style={{ margin: 10, padding: 10 }} key={pokemon.id}>
+                <ItemCard
+                  id={pokemon.id}
+                  name={pokemon.name}
+                  url={pokemon.url}
+                  types={pokemon.types}
+                ></ItemCard>
+              </div>
+            ))}
+          </Box>
+          
+          {/* 読み込み進捗表示（全て読み込み完了するまで） */}
+          {loadingProgress.current < loadingProgress.total && (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                p: 3,
+                flexDirection: 'column',
+              }}
+            >
+              <CircularProgress 
+                size={30} 
+                color="secondary" 
+                sx={{ mb: 1, opacity: 0.7 }}
+              />
+              <div style={{ 
+                color: '#666', 
+                fontSize: '0.9rem',
+                textAlign: 'center'
+              }}>
+                ポケモンを読み込み中... ({loadingProgress.current}/{loadingProgress.total})
+              </div>
+            </Box>
+          )}
+        </>
       )}
     </>
   )
