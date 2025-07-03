@@ -217,7 +217,8 @@ export const PokemonList: FC<any> = () => {
   const filterPokemons = (selectedTypes: string[], word: string = '') => {
     // タイプ・検索文字が設定されていなければ全ポケモンを設定
     if (selectedTypes.length === 0 && !word) {
-      setPokemons(fullPokemons)
+      const sortedPokemons = applySortToPokemonArray(fullPokemons, currentSortType)
+      setPokemons(sortedPokemons)
       return
     }
 
@@ -243,7 +244,9 @@ export const PokemonList: FC<any> = () => {
             return included
           })
 
-    setPokemons(filtered)
+    // フィルタ後にソートを適用
+    const sortedFiltered = applySortToPokemonArray(filtered, currentSortType)
+    setPokemons(sortedFiltered)
   }
 
   /**
